@@ -25,6 +25,8 @@ import { saveGame, loadGame, hasSave } from './game/save.js';
 import { IntroCinematic } from './cinematics/intro.js';
 import { HUD } from './ui/hud.js';
 import { Menus } from './ui/menus.js';
+import { attachDebug, installErrorCapture } from './ui/debug.js';
+import { initReporter, reportNow } from './core/report.js';
 import { audio } from './audio/audio.js';
 import { WORLD } from './world/constants.js';
 import { clamp, lerp } from './core/rng.js';
@@ -59,9 +61,11 @@ const ui = {
   loading: el('loading'), fill: el('load-fill'), status: el('load-status'), tip: el('load-tip'),
 };
 
+let lastReport = '';
 function setLoad(pct, text) {
   ui.fill.style.width = Math.round(pct * 100) + '%';
   if (text) ui.status.textContent = text;
+  if (text && text !== lastReport) { lastReport = text; reportNow(`${Math.round(pct * 100)}% ${text}`); }
 }
 
 const game = {
@@ -184,6 +188,9 @@ async function boot() {
   // ------------------------------------------------------------- loop
   game.menuCam = { angle: 0 };
   engine.add({ update: (dt) => frame(dt) });
+  installErrorCapture();
+  game.debugPanel = attachDebug(game);
+  if (import.meta.env && import.meta.env.DEV) game.reporter = initReporter(game);
   engine.onFrameEnd = (dt) => {
     input.endFrame();
     const f = el('fps');
@@ -423,6 +430,8 @@ game.onSettingsChanged = function onSettingsChanged(key, value) {
 function frame(dt) {
   const { engine, world, sky, terrain, water, vegetation, player, squad, enemies, combat, particles, worldObjects, hud } = game;
   game.elapsed += dt;
+  if (game.debugPanel) game.debugPanel(dt);
+  if (game.reporter) game.reporter(dt);
   const cam = engine.camera;
 
   // ---- global keys
