@@ -52,6 +52,15 @@ function copyGroup(name, srcDir, filter = () => true, rename = safe) {
     fs.copyFileSync(path.join(srcDir, f), path.join(dstDir, key + '.glb'));
     map[key] = `models/${name}/${key}.glb`;
   }
+  // GLBs reference "Textures/colormap.png" relative to themselves: carry the folder along
+  const texSrc = path.join(srcDir, 'Textures');
+  if (fs.existsSync(texSrc)) {
+    const texDst = path.join(dstDir, 'Textures');
+    ensure(texDst);
+    for (const f of fs.readdirSync(texSrc)) {
+      if (fs.statSync(path.join(texSrc, f)).isFile()) fs.copyFileSync(path.join(texSrc, f), path.join(texDst, f));
+    }
+  }
   manifest.models[name] = map;
   log(`${name}: ${Object.keys(map).length} models`);
   return map;

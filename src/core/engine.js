@@ -26,7 +26,7 @@ export class Engine {
     this.camera = new THREE.PerspectiveCamera(settings.get('fov'), window.innerWidth / window.innerHeight, 0.2, 60000);
     this.camera.position.set(0, 60, 0);
 
-    this.clock = new THREE.Clock();
+    this.clock = new THREE.Timer();
     this.systems = [];
     this.running = false;
     this.frameTimes = [];
@@ -71,7 +71,6 @@ export class Engine {
   start() {
     if (this.running) return;
     this.running = true;
-    this.clock.start();
     const loop = () => {
       if (!this.running) return;
       this.raf = requestAnimationFrame(loop);
@@ -83,6 +82,7 @@ export class Engine {
   stop() { this.running = false; cancelAnimationFrame(this.raf); }
 
   tick() {
+    this.clock.update();
     const raw = Math.min(this.clock.getDelta(), 0.1);
     const dt = this.paused ? 0 : raw * this.timeScale;
     this.elapsed += dt;

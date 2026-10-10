@@ -1,7 +1,7 @@
 // Asset loading: manifest driven, concurrent, progress reporting.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import settings from './settings.js';
 
@@ -110,7 +110,13 @@ class Assets {
       fetch(assetUrl(j.path))
         .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.arrayBuffer(); })
         .then((buf) => new Promise((resolve) => {
-          this.gltfLoader.parse(buf, '', (gltf) => {
+          // resource path = the model's own folder, so "Textures/colormap.png" resolves
+          const dir = assetUrl(j.path).replace(/[^/]*$/, '');
+          this.gltfLoader.parse(buf, dir, (gltf) => {
+            // drop animation tracks aimed at bones this rig does not have (finger tips etc.)
+            for (const clip of gltf.animations) {
+              clip.tracks = clip.tracks.filter((t) => gltf.scene.getObjectByName(t.name.slice(0, t.name.lastIndexOf('.'))));
+            }
             gltf.scene.traverse((o) => {
               if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = true; }
             });
@@ -123,7 +129,7 @@ class Assets {
 
     const loadHdr = (j) =>
       new Promise((resolve) => {
-        new RGBELoader().load(assetUrl(j.path), (tex) => {
+        new HDRLoader().load(assetUrl(j.path), (tex) => {
           tex.mapping = THREE.EquirectangularReflectionMapping;
           this.hdr.set(j.name, tex);
           tick(); resolve();

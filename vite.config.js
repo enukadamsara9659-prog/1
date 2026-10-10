@@ -46,4 +46,5 @@ export default defineConfig({
   preview: { host: '0.0.0.0', port: 4173, allowedHosts: true },
   build: { target: 'esnext', chunkSizeWarningLimit: 3000 },
   worker: { format: 'es' },
+  resolve: { dedupe: ['three'] },
 });
