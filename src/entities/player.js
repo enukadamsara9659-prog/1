@@ -8,6 +8,8 @@ import settings from '../core/settings.js';
 
 const _v = new THREE.Vector3();
 const _v2 = new THREE.Vector3();
+const _muzzleZero = new THREE.Vector3();
+const _muzzleUp = new THREE.Vector3(0, 1.35, 0);
 const _q = new THREE.Quaternion();
 const UP = new THREE.Vector3(0, 1, 0);
 
@@ -114,7 +116,8 @@ export class Player {
     for (const w of this.weapons) {
       if (!w.world) continue;
       w.world.visible = false;
-      this.char.attachToHand(w.world, 'handR', new THREE.Vector3(0.02, -0.04, 0.05), new THREE.Vector3(-Math.PI / 2, 0, Math.PI * 0.02));
+      // gun models point their muzzle down -Z; the hand bone's +Y runs along the arm
+      this.char.attachToHand(w.world, 'handR', new THREE.Vector3(0.0, -0.03, 0.02), new THREE.Vector3(Math.PI / 2, 0, Math.PI * 0.03));
     }
     this.showCurrentWeapon();
   }
@@ -412,11 +415,11 @@ export class Player {
 
   muzzleWorld(out = new THREE.Vector3()) {
     const w = this.weapon;
-    if (w && w.world && w.world.visible) {
-      w.world.getWorldPosition(out);
-      return out;
+    if (w && w.world && w.world.visible && w.world.parent) {
+      w.world.updateWorldMatrix(true, false);
+      return out.copy(w.worldMuzzle || _muzzleZero).applyMatrix4(w.world.matrixWorld);
     }
-    return out.copy(this.pos).add(new THREE.Vector3(0, 1.35, 0));
+    return out.copy(this.pos).add(_muzzleUp);
   }
 
   updateActions(dt, input) {

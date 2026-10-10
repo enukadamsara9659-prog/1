@@ -83,7 +83,10 @@ export class Weapon {
         if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; o.frustumCulled = false; o.renderOrder = 10; }
       });
       m.scale.setScalar(1.0);
-      this.muzzleOffset = new THREE.Vector3(0, 0.02, 0.42);
+      // guns are authored with the muzzle toward -Z; derive the flash point
+      m.updateMatrixWorld(true);
+      const bb = new THREE.Box3().setFromObject(m);
+      this.muzzleOffset = new THREE.Vector3(0, (bb.min.y + bb.max.y) * 0.5 + 0.01, Math.min(-0.08, bb.min.z - 0.06));
       g.add(m);
     } else {
       // procedural aether blade
@@ -100,11 +103,11 @@ export class Weapon {
           color: 0x9fe8ff, emissive: 0x49d8ff, emissiveIntensity: 2.6, roughness: 0.15, metalness: 0.6,
         })
       );
-      edge.rotation.x = -Math.PI / 2;
-      edge.position.z = 0.4;
+      edge.rotation.x = -Math.PI / 2;          // cone tip toward -Z (camera forward)
+      edge.position.z = -0.4;
       blade.add(edge);
       this.bladeEdge = edge;
-      this.muzzleOffset = new THREE.Vector3(0, 0.05, 0.6);
+      this.muzzleOffset = new THREE.Vector3(0, 0.05, -0.6);
       g.add(blade);
     }
     // muzzle flash
@@ -118,7 +121,7 @@ export class Weapon {
       new THREE.MeshBasicMaterial({ color: 0xffc266, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })
     );
     star.rotation.x = -Math.PI / 2;
-    star.position.z = 0.18;
+    star.position.z = -0.18;
     flash.add(core, star);
     flash.visible = false;
     flash.renderOrder = 20;
@@ -128,6 +131,7 @@ export class Weapon {
     if (this.muzzleOffset) flash.position.copy(this.muzzleOffset);
 
     const light = new THREE.PointLight(0xffc077, 0, 14, 2);
+    if (this.muzzleOffset) light.position.copy(this.muzzleOffset);
     this.muzzleLight = light;
     g.add(light);
 
@@ -143,6 +147,10 @@ export class Weapon {
     const m = assets.model('weapons', this.def.model);
     if (!m) return null;
     m.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    m.updateMatrixWorld(true);
+    const bb = new THREE.Box3().setFromObject(m);
+    // muzzle sits at the -Z end of the authored model
+    this.worldMuzzle = new THREE.Vector3(0, (bb.min.y + bb.max.y) * 0.5, Math.min(-0.08, bb.min.z - 0.06));
     this.world = m;
     return m;
   }

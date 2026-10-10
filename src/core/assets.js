@@ -7,7 +7,25 @@ import settings from './settings.js';
 
 const MAX_PARALLEL = 12;
 
-export class Assets {
+/**
+ * Put a freshly loaded / cloned skinned model into its bind pose and refresh the
+ * bone matrices. Without this, Box3.setFromObject() measures skinned meshes against
+ * all-zero bone matrices and collapses to a point (characters end up 10x too big).
+ */
+export function prepSkins(root) {
+  root.traverse((o) => {
+    if (o.isSkinnedMesh && o.skeleton) {
+      o.skeleton.pose();
+      o.skeleton.update();
+      o.boundingBox = null;
+      o.boundingSphere = null;
+    }
+  });
+  root.updateMatrixWorld(true);
+  return root;
+}
+
+class Assets {
   constructor() {
     this.manifest = null;
     this.textures = new Map();
@@ -84,6 +102,7 @@ export class Assets {
             gltf.scene.traverse((o) => {
               if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = true; }
             });
+            prepSkins(gltf.scene);
             this.models.set(`${j.group}/${j.name}`, gltf);
             tick(); resolve();
           }, () => { console.warn('model failed', j.path); tick(); resolve(); });
@@ -124,7 +143,7 @@ export class Assets {
     return t || null;
   }
 
-  /** raw gltf (shared) */
+/** raw gltf (shared) */
   gltf(group, name) { return this.models.get(`${group}/${name}`); }
 
   /** clone of a model (skeleton-safe) */
@@ -135,7 +154,7 @@ export class Assets {
     clone.traverse((o) => {
       if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
     });
-    return clone;
+    return prepSkins(clone);
   }
 
   /** all names of a group */

@@ -328,6 +328,23 @@ for (let i = 0; i < 600; i++) {
   }
 }
 console.log('frames simulated: 600, errors:', errors);
+{
+  const mz = player.muzzleWorld(new THREE.Vector3());
+  const fwd = player.lookDir(new THREE.Vector3());
+  const d = mz.clone().sub(player.pos);
+  {
+    const c = player.char;
+    console.log('  char model scale', c.model.scale.x.toFixed(4), 'target height', c.height);
+    const hand = c.bones.handR;
+    const sp = new THREE.Vector3(), sq = new THREE.Quaternion(), ss = new THREE.Vector3();
+    hand.matrixWorld.decompose(sp, sq, ss);
+    console.log('  handR world pos', sp.toArray().map(v=>v.toFixed(2)).join(','), 'scale', ss.toArray().map(v=>v.toFixed(2)).join(','));
+    const ws = new THREE.Vector3(); player.weapon.world.matrixWorld.decompose(new THREE.Vector3(), new THREE.Quaternion(), ws);
+    console.log('  weapon world scale', ws.toArray().map(v=>v.toFixed(2)).join(','), '| local scale', player.weapon.world.scale.toArray().map(v=>v.toFixed(2)).join(','));
+  }
+  console.log('  muzzle dist from player centre:', d.length().toFixed(2), 'm | dot with lookDir', fwd.dot(d.clone().normalize()).toFixed(2));
+  console.log('  weapon world parent:', player.weapon.world && player.weapon.world.parent ? (player.weapon.world.parent.name || player.weapon.world.parent.type) : 'none', '| worldMuzzle', player.weapon.worldMuzzle ? player.weapon.worldMuzzle.toArray().map(v=>v.toFixed(2)).join(',') : 'n/a');
+}
 console.log('  player hp', player.health.toFixed(0), 'pos', player.pos.toArray().map((v) => v.toFixed(1)).join(','));
 console.log('  enemies active', enemies.active.length, 'killed', enemies.killCount);
 console.log('  player kills', player.kills, 'level', player.level, 'xp', player.xp.toFixed(0), 'shards', player.shards);

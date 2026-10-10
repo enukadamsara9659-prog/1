@@ -1,7 +1,7 @@
 // Humanoid characters: skeletal animation + procedural aim / hit / death posing.
 import * as THREE from 'three';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
-import assets from '../core/assets.js';
+import assets, { prepSkins } from '../core/assets.js';
 import { Rng, clamp, lerp } from '../core/rng.js';
 
 const ALIAS = {
@@ -69,12 +69,13 @@ export class Character {
         o.frustumCulled = true;
       }
     });
+    prepSkins(this.model);
 
     // ---- auto scale to the requested height
     const box = new THREE.Box3().setFromObject(this.model);
     const h = Math.max(0.2, box.max.y - box.min.y);
     const s = this.height / h;
-    this.model.scale.setScalar(s);
+    this.model.scale.multiplyScalar(s);
     this.group.add(this.model);
 
     // ---- bones
@@ -232,7 +233,13 @@ export class Character {
     b.add(obj);
     obj.position.copy(offset || new THREE.Vector3(0, -0.02, 0.02));
     obj.rotation.set(rot ? rot.x : -Math.PI / 2, rot ? rot.y : 0, rot ? rot.z : 0);
-    obj.scale.setScalar(1 / (this.model.scale.x || 1));
+    // rigs export their armature at 0.01 (centimetres) or 100; cancel that out
+    // so the prop keeps its authored metric size once it is in world space
+    b.updateWorldMatrix(true, false);
+    const bs = Math.abs(_v2.setFromMatrixScale(b.matrixWorld).x) || 1;
+    const inv = 1 / bs;
+    obj.scale.setScalar(inv);
+    obj.position.multiplyScalar(inv);   // offsets are authored in metres
   }
 
   fireRecoil(amount = 1) { this.recoil = Math.min(1.4, this.recoil + amount); }

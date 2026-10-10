@@ -70,7 +70,7 @@ class Companion {
     if (wm) {
       wm.traverse((o) => { if (o.isMesh) { o.castShadow = true; } });
       this.weaponMesh = wm;
-      this.char.attachToHand(wm, 'handR', new THREE.Vector3(0.02, -0.04, 0.05), new THREE.Vector3(-Math.PI / 2, 0, 0));
+      this.char.attachToHand(wm, 'handR', new THREE.Vector3(0.0, -0.03, 0.02), new THREE.Vector3(Math.PI / 2, 0, Math.PI * 0.03));
     }
     // shoulder light so you can spot them at night
     this.light = new THREE.PointLight(0x9fd8ff, 1.4, 9, 2);

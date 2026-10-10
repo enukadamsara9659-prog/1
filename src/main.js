@@ -192,6 +192,11 @@ async function boot() {
     }
   };
 
+  // pre-compile every program up front so the first frame does not stall
+  setLoad(0.99, 'warming shaders');
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  try { engine.renderer.compile(engine.scene, engine.camera); } catch (e) { console.warn('shader precompile', e); }
+
   setLoad(1, 'ready');
   game.ready = true;
   ui.loading.classList.add('hidden');
@@ -326,12 +331,30 @@ game.beginPlay = async function beginPlay({ load }) {
     game.enterPlay();
     return;
   }
-  const skip = (e) => { if (e.type === 'keydown' && e.code !== 'Escape') intro.skip(); else if (e.type === 'pointerdown') intro.skip(); };
+  // "press any key to skip" hint (fades out on its own)
+  const hint = document.createElement('div');
+  hint.textContent = 'press any key to skip';
+  hint.style.cssText = 'position:absolute;left:50%;bottom:5.5%;transform:translateX(-50%);padding:8px 16px;'
+    + 'color:rgba(255,255,255,.8);font:600 12px/1 ui-sans-serif,system-ui,sans-serif;letter-spacing:.16em;'
+    + 'text-transform:uppercase;pointer-events:none;opacity:0;transition:opacity .8s;text-shadow:0 2px 10px rgba(0,0,0,.9)';
+  document.getElementById('ui').appendChild(hint);
+  requestAnimationFrame(() => { hint.style.opacity = '1'; });
+  const hintTimer = setTimeout(() => { hint.style.opacity = '0'; }, 4500);
+
+  // ignore the click that dismissed the main menu, then allow skipping
+  const t0 = performance.now();
+  const skip = (e) => {
+    if (performance.now() - t0 < 800) return;
+    if (e.type === 'keydown' && e.code !== 'Escape') intro.skip();
+    else if (e.type === 'pointerdown') intro.skip();
+  };
   window.addEventListener('keydown', skip);
   window.addEventListener('pointerdown', skip);
   await intro.start();
   window.removeEventListener('keydown', skip);
   window.removeEventListener('pointerdown', skip);
+  clearTimeout(hintTimer);
+  hint.remove();
   game.enterPlay();
 };
 
