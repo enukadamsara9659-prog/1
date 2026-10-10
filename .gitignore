@@ -1,0 +1,8 @@
+node_modules
+dist
+.cache
+*.log
+.DS_Store
+
+# generated asset bundle (npm run assets)
+public/assets

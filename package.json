@@ -1,0 +1,32 @@
+{
+  "name": "aetherfall",
+  "version": "1.0.0",
+  "description": "AETHERFALL: Cradle of Ash \u2014 open-world squad action RPG in the browser",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "assets": "bash scripts/fetch-sources.sh && node scripts/build-assets.mjs",
+    "smoke": "node tools/headless-smoke.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/enukadamsara9659-prog/1.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/enukadamsara9659-prog/1/issues"
+  },
+  "homepage": "https://github.com/enukadamsara9659-prog/1#readme",
+  "dependencies": {
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.5",
+    "vite": "^8.3.4"
+  },
+  "type": "module"
+}

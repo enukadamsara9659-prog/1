@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>AETHERFALL — Cradle of Ash</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☄️</text></svg>" />
+  <link rel="stylesheet" href="/src/ui/style.css" />
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+
+  <div id="ui">
+    <!-- ============================ loading ============================ -->
+    <div id="loading" class="screen">
+      <div class="load-inner">
+        <div class="title-small">AETHERFALL</div>
+        <div class="sub">Cradle of Ash</div>
+        <div class="bar"><div class="bar-fill" id="load-fill"></div></div>
+        <div class="load-status" id="load-status">booting…</div>
+        <div class="tip" id="load-tip"></div>
+      </div>
+    </div>
+
+    <!-- ============================= menu =============================== -->
+    <div id="menu" class="screen hidden">
+      <div class="menu-inner">
+        <div class="logo">
+          <div class="logo-main">AETHERFALL</div>
+          <div class="logo-sub">CRADLE OF ASH</div>
+        </div>
+        <div class="menu-buttons">
+          <button class="btn primary" data-act="continue">CONTINUE</button>
+          <button class="btn" data-act="new">NEW GAME</button>
+          <button class="btn" data-act="settings">SETTINGS</button>
+          <button class="btn" data-act="controls">CONTROLS</button>
+          <button class="btn" data-act="credits">CREDITS</button>
+        </div>
+        <div class="menu-foot">WASD move · Mouse look · LMB fire · RMB aim · R reload · M map · I inventory · Esc pause</div>
+      </div>
+    </div>
+
+    <!-- ============================ settings =========================== -->
+    <div id="settings" class="screen hidden">
+      <div class="panel">
+        <h2>SETTINGS</h2>
+        <div class="rows" id="settings-rows"></div>
+        <div class="panel-buttons">
+          <button class="btn" data-act="close-settings">BACK</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================= pause ============================= -->
+    <div id="pause" class="screen hidden">
+      <div class="panel">
+        <h2>PAUSED</h2>
+        <div class="menu-buttons">
+          <button class="btn primary" data-act="resume">RESUME</button>
+          <button class="btn" data-act="open-settings">SETTINGS</button>
+          <button class="btn" data-act="save">SAVE GAME</button>
+          <button class="btn" data-act="quit">MAIN MENU</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================== HUD ============================== -->
+    <div id="hud" class="hidden">
+      <div id="compass"><div id="compass-strip"></div><div id="compass-needle"></div></div>
+      <div id="quest-tracker"></div>
+      <div id="minimap-wrap">
+        <canvas id="minimap" width="260" height="260"></canvas>
+        <div id="minimap-frame"></div>
+      </div>
+      <div id="crosshair"><span></span><span></span><span></span><span></span></div>
+      <div id="hitmarker"></div>
+      <div id="killfeed"></div>
+      <div id="notifications"></div>
+      <div id="vitals">
+        <div class="bar-row"><div class="bar-bg"><div class="bar-fg health" id="bar-health"></div></div><span class="bar-label">HEALTH</span></div>
+        <div class="bar-row"><div class="bar-bg"><div class="bar-fg shield" id="bar-shield"></div></div><span class="bar-label">SHIELD</span></div>
+        <div class="bar-row"><div class="bar-bg thin"><div class="bar-fg stamina" id="bar-stamina"></div></div><span class="bar-label">STAMINA</span></div>
+      </div>
+      <div id="squad-status"></div>
+      <div id="weapon-panel">
+        <div id="weapon-name">—</div>
+        <div id="weapon-ammo"><span id="ammo-mag">0</span><span id="ammo-sep">/</span><span id="ammo-res">∞</span></div>
+        <div id="weapon-slots"></div>
+      </div>
+      <div id="xp-row"><div id="xp-bar"><div id="xp-fill"></div></div><span id="xp-level">LVL 1</span></div>
+      <div id="interact-prompt" class="hidden"></div>
+      <div id="subtitles"></div>
+      <div id="damage-layer"></div>
+      <div id="threat"><span id="threat-text"></span></div>
+      <div id="fps"></div>
+    </div>
+
+    <!-- ============================== map ============================== -->
+    <div id="worldmap" class="screen hidden">
+      <div class="map-wrap">
+        <canvas id="map-canvas" width="900" height="900"></canvas>
+        <div class="map-side">
+          <h2>WORLD MAP</h2>
+          <div id="map-legend"></div>
+          <div id="map-info"></div>
+          <button class="btn" data-act="close-map">CLOSE (M)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================== inventory =========================== -->
+    <div id="inventory" class="screen hidden">
+      <div class="panel wide">
+        <h2>LOADOUT &amp; INVENTORY</h2>
+        <div class="inv-grid" id="inv-grid"></div>
+        <div class="panel-buttons"><button class="btn" data-act="close-inv">CLOSE (I)</button></div>
+      </div>
+    </div>
+
+    <!-- ============================= skills ============================ -->
+    <div id="skills" class="screen hidden">
+      <div class="panel wide">
+        <h2>SKILLS</h2>
+        <div id="skill-points"></div>
+        <div class="skill-cols" id="skill-cols"></div>
+        <div class="panel-buttons"><button class="btn" data-act="close-skills">CLOSE (K)</button></div>
+      </div>
+    </div>
+
+    <!-- ============================= journal =========================== -->
+    <div id="journal" class="screen hidden">
+      <div class="panel wide">
+        <h2>JOURNAL</h2>
+        <div class="journal-cols"><div id="quest-list"></div><div id="quest-detail"></div></div>
+        <div class="panel-buttons"><button class="btn" data-act="close-journal">CLOSE (J)</button></div>
+      </div>
+    </div>
+
+    <!-- =========================== cinematic =========================== -->
+    <div id="cine" class="hidden">
+      <div id="cine-bars"><div></div><div></div></div>
+      <div id="cine-text"></div>
+    </div>
+
+    <div id="death" class="screen hidden">
+      <div class="death-inner">
+        <div class="death-title">YOU DIED</div>
+        <div class="death-sub" id="death-sub"></div>
+        <button class="btn primary" data-act="respawn">RESPAWN</button>
+      </div>
+    </div>
+
+    <div id="toast"></div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
