@@ -59,6 +59,8 @@ export class Character {
     this.tmpObj = new THREE.Object3D();
 
     const modelName = opts.model || 'soldier';
+    this.bones = {};      // always defined, so attachToHand() is safe even without a model
+    this.skinned = [];
     const src = assets.gltf('characters', modelName);
     if (!src) { console.warn('missing character', modelName); return; }
     this.model = SkeletonUtils.clone(src.scene);
@@ -228,7 +230,7 @@ export class Character {
   }
 
   attachToHand(obj, bone = 'handR', offset = null, rot = null) {
-    const b = this.bones[bone];
+    const b = this.bones && this.bones[bone];
     if (!b) { this.group.add(obj); return; }
     b.add(obj);
     obj.position.copy(offset || new THREE.Vector3(0, -0.02, 0.02));

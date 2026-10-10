@@ -10,7 +10,7 @@ function canvas(size) {
 
 function luminanceToHeight(src, size) {
   const h = canvas(size);
-  const hc = h.getContext('2d');
+  const hc = h.getContext('2d', { willReadFrequently: true });
   hc.drawImage(src, 0, 0);
   const img = hc.getImageData(0, 0, size, size);
   const d = img.data;
@@ -25,11 +25,11 @@ function luminanceToHeight(src, size) {
 
 /** Sobel height → packed normal.rg + roughness in B */
 function packNormalRough(heightCanvas, size, strength, roughness, roughCanvas) {
-  const hc = heightCanvas.getContext('2d');
+  const hc = heightCanvas.getContext('2d', { willReadFrequently: true });
   const hd = hc.getImageData(0, 0, size, size).data;
-  const rd = roughCanvas ? roughCanvas.getContext('2d').getImageData(0, 0, size, size).data : null;
+  const rd = roughCanvas ? roughCanvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, size, size).data : null;
   const out = canvas(size);
-  const oc = out.getContext('2d');
+  const oc = out.getContext('2d', { willReadFrequently: true });
   const img = oc.createImageData(size, size);
   const d = img.data;
   const H = (x, y) => hd[(((y + size) % size) * size + ((x + size) % size)) * 4] / 255;
@@ -73,12 +73,12 @@ function toTexture(canvasEl, srgb, repeat = 1) {
 export function buildProcTexture(opts) {
   const size = opts.size || 512;
   const c = canvas(size);
-  const ctx = c.getContext('2d');
+  const ctx = c.getContext('2d', { willReadFrequently: true });
   ctx.fillStyle = opts.bg || '#808080';
   ctx.fillRect(0, 0, size, size);
   opts.draw(ctx, size);
-  const h = opts.height ? (() => { const hc = canvas(size); opts.height(hc.getContext('2d'), size); return hc; })() : luminanceToHeight(c, size);
-  const roughCanvas = opts.rough ? (() => { const rc = canvas(size); opts.rough(rc.getContext('2d'), size); return rc; })() : null;
+  const h = opts.height ? (() => { const hc = canvas(size); opts.height(hc.getContext('2d', { willReadFrequently: true }), size); return hc; })() : luminanceToHeight(c, size);
+  const roughCanvas = opts.rough ? (() => { const rc = canvas(size); opts.rough(rc.getContext('2d', { willReadFrequently: true }), size); return rc; })() : null;
   const nr = packNormalRough(h, size, opts.strength ?? 2.2, opts.roughness ?? 0.85, roughCanvas);
   return { color: toTexture(c, true), nr: toTexture(nr, false) };
 }

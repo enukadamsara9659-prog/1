@@ -8,6 +8,17 @@ import settings from './settings.js';
 const MAX_PARALLEL = 12;
 
 /**
+ * Manifest paths are relative to public/assets/ (e.g. "tex/terrain/grass_color.jpg").
+ * Resolve them against the app base so they work on any host / sub-path. Absolute
+ * URLs and paths that already start with "/" or "assets/" are left alone.
+ */
+export function assetUrl(p) {
+  if (!p || /^(https?:|blob:|data:)/.test(p) || p.startsWith('/')) return p;
+  const base = (import.meta.env && import.meta.env.BASE_URL) || '/';
+  return base + (p.startsWith('assets/') ? p : 'assets/' + p);
+}
+
+/**
  * Put a freshly loaded / cloned skinned model into its bind pose and refresh the
  * bone matrices. Without this, Box3.setFromObject() measures skinned meshes against
  * all-zero bone matrices and collapses to a point (characters end up 10x too big).
@@ -37,6 +48,7 @@ class Assets {
 
   async loadManifest(url = 'assets/manifest.json') {
     const res = await fetch(url);
+    if (!res.ok) throw new Error(`manifest ${url} -> HTTP ${res.status}`);
     this.manifest = await res.json();
     return this.manifest;
   }
@@ -79,7 +91,7 @@ class Assets {
     const loadTex = (j) =>
       new Promise((resolve) => {
         texLoader.load(
-          j.path,
+          assetUrl(j.path),
           (t) => {
             t.colorSpace = j.colorSpace;
             t.wrapS = t.wrapT = THREE.RepeatWrapping;
@@ -95,8 +107,8 @@ class Assets {
       });
 
     const loadModel = (j) =>
-      fetch(j.path)
-        .then((r) => r.arrayBuffer())
+      fetch(assetUrl(j.path))
+        .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.arrayBuffer(); })
         .then((buf) => new Promise((resolve) => {
           this.gltfLoader.parse(buf, '', (gltf) => {
             gltf.scene.traverse((o) => {
@@ -107,11 +119,11 @@ class Assets {
             tick(); resolve();
           }, () => { console.warn('model failed', j.path); tick(); resolve(); });
         }))
-        .catch(() => { tick(); });
+        .catch((e) => { console.warn('model failed', j.path, e && e.message); tick(); });
 
     const loadHdr = (j) =>
       new Promise((resolve) => {
-        new RGBELoader().load(j.path, (tex) => {
+        new RGBELoader().load(assetUrl(j.path), (tex) => {
           tex.mapping = THREE.EquirectangularReflectionMapping;
           this.hdr.set(j.name, tex);
           tick(); resolve();
