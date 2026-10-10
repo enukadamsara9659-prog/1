@@ -405,7 +405,7 @@ export class PostFX {
       u.uSkyColor.value.copy(this.sky.zenithColor).multiplyScalar(0.6).addScalar(0.08);
       u.uCoverage.value = this.sky.weather.cloudiness;
       u.uWind.value.set(this.sky.weather.wind.x * 0.008, 0, this.sky.weather.wind.y * 0.008);
-      u.uBlueNoiseOffset.set((this.frame % 8) * 0.125, ((this.frame >> 3) % 8) * 0.125);
+      u.uBlueNoiseOffset.value.set((this.frame % 8) * 0.125, ((this.frame >> 3) % 8) * 0.125);
       const m = new THREE.Matrix4().multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
       u.uInvViewProj.value.copy(m).invert();
       this.blit(this.cloudMat, this.cloudRT);

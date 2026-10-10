@@ -444,6 +444,8 @@ function duckVec() {
   _duck = {
     x: 0, y: 0, z: 1,
     set(x, y, z) { this.x = x; this.y = y; this.z = z; return this; },
+    // three r186 getWorldDirection() calls set(...).negate().normalize()
+    negate() { this.x = -this.x; this.y = -this.y; this.z = -this.z; return this; },
     normalize() {
       const l = Math.hypot(this.x, this.y, this.z) || 1;
       this.x /= l; this.y /= l; this.z /= l; return this;
